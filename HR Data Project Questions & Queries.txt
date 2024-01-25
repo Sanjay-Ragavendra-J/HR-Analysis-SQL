@@ -1,0 +1,112 @@
+1. Number of male and female employees by different age groups (18-30, 31-50, 50+)
+
+SELECT 
+CASE 
+	WHEN age<=30 THEN '18-30'
+	WHEN age<=50 THEN '31-50'
+	ELSE '50+'
+END AS age_group,	
+COUNT(*) FILTER(WHERE gender='Male') AS Males,
+COUNT(*) FILTER(WHERE gender='Female') AS Females
+FROM personal_details
+GROUP BY 1
+ORDER BY 1 ASC;
+
+
+
+2. Display a list of employees who have completed 4 or more years education. Return employee number, years, field.
+
+SELECT employee_num,education_years,education_field
+FROM personal_details
+WHERE education_years >= 4
+ORDER BY 1 ASC;
+
+
+
+3. The company wants to host a department-wise celebration night and requires the number of employees in each department to arrange and cater to them. Return the number of employees in each department.
+
+SELECT department, COUNT(*)
+FROM professional_details
+GROUP BY 1
+ORDER BY 1 ASC;
+
+
+
+4. Display the 5 seniormost employees based on job level, then on the years worked at the company. If there is a tie, use years they worked in the current role to break the tie.
+
+SELECT pr.employee_num, pr.job_level, e.years_at_company, e.years_in_curr_role
+FROM professional_details pr
+INNER JOIN experience e
+ON pr.employee_num = e.employee_num
+ORDER BY 2 DESC, 3 DESC, 4 DESC
+LIMIT 5;
+
+
+
+5. In order to find how overtime has affected the hike, return the average hike for those who worked overtime and for those did not.
+
+SELECT AVG(percent_sal_hike) FILTER(WHERE overtime = 'Yes') AS average_for_overtime,
+AVG(percent_sal_hike) FILTER(WHERE overtime = 'No') AS average_for_non_overtime
+FROM salary_performance;
+
+Very negligable difference of 0.04%, and contrary to expectations, average of non-overtime workers is the one which is marginally higher.
+
+
+
+6. The company, as an initiative, wants to conduct a morale-boosting and counselling session for its younger employees who are less satisfied with their job. Identify them and order by job satisfaction and then by employee number.
+
+SELECT employee_num, job_satisfaction 
+FROM indices
+WHERE job_satisfaction <= 2
+ORDER BY 2 ASC, 1 ASC;
+
+
+
+7. Identify employees who are due for promotion more than 10 years with a performance rating of 4 and not on senior level (job level 5).
+
+SELECT e.employee_num, e.years_since_last_promotion, s.perf_rating, pr.job_level
+FROM experience e
+INNER JOIN salary_performance s ON e.employee_num = s.employee_num
+INNER JOIN professional_details pr ON s.employee_num = pr.employee_num
+WHERE e.years_since_last_promotion > 10 AND s.perf_rating = 4 AND pr.job_level <> 5
+ORDER BY 1 ASC;
+
+
+
+8. The management plans to give a 10% raise for employees who work overtime with a performance rating of 4. Return the employee number of those employees and their new salary.
+
+SELECT pr.employee_num, (s.monthly_income*12*1.1) AS new_salary
+FROM professional_details pr
+INNER JOIN salary_performance s ON pr.employee_num = s.employee_num
+WHERE s.overtime = 'Yes' AND s.perf_rating = 4
+ORDER BY 1 ASC;
+
+
+
+10. The finance team needs deatils on the annual salary split-up on the basis of job level. Return job level and the corresponding salary, in the ascending order of the job level.
+
+SELECT pr.job_level, SUM(s.monthly_income*12) AS total_salary
+FROM professional_details pr
+INNER JOIN salary_performance s ON pr.employee_num = s.employee_num
+GROUP BY 1
+ORDER BY 1 ASC;
+
+
+
+11. Find the average salary based on the job role and the job level.
+
+SELECT pr.job_role, pr.job_level, AVG(s.monthly_income*12) AS average_salary
+FROM professional_details pr
+INNER JOIN salary_performance s ON pr.employee_num = s.employee_num
+GROUP BY 1,2
+ORDER BY 1 ASC, 2 ASC;
+
+
+
+12. Show the 3 most common education fields among youngsters (age<25) in the company.
+
+SELECT education_field, COUNT(*)
+FROM personal_details
+WHERE age<25
+GROUP BY 1
+ORDER BY COUNT(*) DESC;	
